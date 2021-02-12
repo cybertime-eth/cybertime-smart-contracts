@@ -17,7 +17,7 @@ contract CyberTimeFinanceToken is ERC20 {
         _;
     }
 
-    constructor(address _owner) ERC20("CyberTime Finance", "CTF") {
+    constructor(address _owner) ERC20("CyberTime Finance Token", "CTF") {
         // set owner
         owner = _owner;
     }
