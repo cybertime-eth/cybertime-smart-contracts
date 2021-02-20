@@ -5,50 +5,22 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract CyberTimeFinanceToken is ERC20 {
 
-    // list of addresses which can mint CFT Tokens
-    mapping (address => bool) public minters; 
-
-    // owner of the contract
+    address public farmingContract;
     address public owner;
 
-    // Modifiers
-    modifier onlyOwner() {
-        require(isOwner(), "CTF: caller is not the owner");
-        _;
-    }
-
-    constructor(address _owner) ERC20("CyberTime Finance Token", "CTF") {
-        // set owner
+    constructor(address _owner, uint256 _initialMintAmt) ERC20("CyberTime Finance Token", "CTF") {
         owner = _owner;
+        _mint(_owner, _initialMintAmt);
     }
 
     // mint tokens
-    function mint(address _to, uint256 _amt) external {
-        require(minters[msg.sender] == true, "CTF: Invalid Minter");
+    function mint(address _to, uint256 _amt) public {
+        require(farmingContract == msg.sender, "CTFToken: You are not authorised to mint");
         _mint(_to, _amt);
     }
 
-    /** 
-        Admin Functionalities
-    */
-
-    // Admin can add new minter
-    function addMinter(address _newMinter) public onlyOwner {
-        minters[_newMinter] = true;
-    }
-
-    // Admin can remove minter
-    function removeMinter(address _minter) public onlyOwner {
-        minters[_minter] = false;
-    }
-
-    // Checks if sender is owner
-    function isOwner() public view returns (bool) {
-        return msg.sender == owner;
-    }
-
-    // Changes owner
-    function setOwner(address _newOwner) public onlyOwner {
-        owner = _newOwner;
+    function addFarmingContract(address _farmingContractAddr) public {
+        require(msg.sender == owner, "CTFToken: You're not owner");
+        farmingContract = _farmingContractAddr;
     }
 }
