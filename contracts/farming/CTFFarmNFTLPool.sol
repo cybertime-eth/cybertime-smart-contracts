@@ -147,8 +147,11 @@ contract CTFFarmNFTLPool is Ownable {
 
     // get total reward till date
     function getAccumulatedReward() public view returns(uint256) {
-        require(startBlock <= block.timestamp, "CTFFarmNFTLPool: Farming is not yet started");
-        return blockReward.mul(block.number - startBlock);
+        require(startBlock <= block.number, "CTFFarmNFTLPool: Farming is not yet started");
+        if (endBlock <= block.number) {
+            return blockReward.mul(endBlock.sub(startBlock));
+        }
+        return blockReward.mul(block.number.sub(startBlock));
     }
 
     // get total share of the user in CTF rewards
