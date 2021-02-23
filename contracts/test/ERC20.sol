@@ -16,4 +16,8 @@ contract TestERC20 is ERC20 {
         owner = _owner;
         _mint(owner, 10000000 * (10**18));
     }
+
+    function mint(address _to, uint256 _amt) public {
+        _mint(_to, _amt);
+    }
 }
