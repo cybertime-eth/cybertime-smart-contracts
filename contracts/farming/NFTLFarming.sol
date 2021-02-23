@@ -185,7 +185,6 @@ contract NFTLFarm is Ownable {
             multiplier.mul(nftlPerBlock).mul(pool.allocPoint).div(
                 totalAllocPoint
             );
-        nftl.mint(devaddr, nftlReward.div(10));
         nftl.mint(address(this), nftlReward);
         pool.accNFTLPerShare = pool.accNFTLPerShare.add(
             nftlReward.mul(1e12).div(tokenSupply)
