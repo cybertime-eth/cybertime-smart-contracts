@@ -40,6 +40,8 @@ contract NFTLFarm is Ownable {
     NFTLToken public nftl;
     // Dev address.
     address public devaddr;
+    // address to receive the team rewards
+    address public teamRewardsReceiver;
     // Block number when bonus NFTL period ends.
     uint256 public bonusEndBlock;
     // NFTL tokens created per block.
@@ -54,8 +56,14 @@ contract NFTLFarm is Ownable {
     uint256 public totalAllocPoint = 0;
     // The block number when NFTL mining starts.
     uint256 public startBlock;
+
+    // team share, normalised by 10000
+    uint256 public teamShare;
+
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
+
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
+
     event EmergencyWithdraw(
         address indexed user,
         uint256 indexed pid,
@@ -65,15 +73,19 @@ contract NFTLFarm is Ownable {
     constructor(
         NFTLToken _nftl,
         address _devaddr,
+        address _teamRewardsReceiver,
         uint256 _nftlPerBlock,
+        uint256 _teamShare,
         uint256 _startBlock,
         uint256 _bonusEndBlock
     ) public {
         nftl = _nftl;
         devaddr = _devaddr;
         nftlPerBlock = _nftlPerBlock;
+        teamShare = _teamShare;
         bonusEndBlock = _bonusEndBlock;
         startBlock = _startBlock;
+        teamRewardsReceiver = _teamRewardsReceiver;
     }
 
     function poolLength() external view returns (uint256) {
@@ -185,7 +197,14 @@ contract NFTLFarm is Ownable {
             multiplier.mul(nftlPerBlock).mul(pool.allocPoint).div(
                 totalAllocPoint
             );
-        nftl.mint(address(this), nftlReward);
+
+        // staker share
+        uint256 teamReward = nftlReward.mul(teamShare).div(10000);
+        // mint reward for stakers
+        nftl.mint(address(this), nftlReward.sub(teamReward));
+        // mint reward of the team
+        nftl.mint(teamRewardsReceiver, teamReward);
+
         pool.accNFTLPerShare = pool.accNFTLPerShare.add(
             nftlReward.mul(1e12).div(tokenSupply)
         );
@@ -256,5 +275,11 @@ contract NFTLFarm is Ownable {
     function dev(address _devaddr) public {
         require(msg.sender == devaddr, "dev: wut?");
         devaddr = _devaddr;
+    }
+
+    function updateTeamShare(uint256 _newShare) public {
+        require(msg.sender == devaddr, "dev: wut?");
+        require(_newShare < 0 && _newShare > 100, "Wrong Values");
+        teamShare = _newShare;
     }
 }

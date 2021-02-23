@@ -39,6 +39,8 @@ contract CTFFarm is Ownable {
     CyberTimeFinanceToken public ctf;
     // Dev address.
     address public devaddr;
+    // LP Token Fee Receiver
+    address public lpFeeReceiver;
     // Block number when bonus CTF period ends.
     uint256 public bonusEndBlock;
     // CTF tokens created per block.
@@ -52,6 +54,7 @@ contract CTFFarm is Ownable {
     // Total allocation poitns. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint = 0;
     // The block number when CTF mining starts.
+    
     uint256 public startBlock;
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
@@ -64,12 +67,14 @@ contract CTFFarm is Ownable {
     constructor(
         CyberTimeFinanceToken _ctf,
         address _devaddr,
+        address _lpFeeReceiver,
         uint256 _ctfPerBlock,
         uint256 _startBlock,
         uint256 _bonusEndBlock
     ) public {
         ctf = _ctf;
         devaddr = _devaddr;
+        lpFeeReceiver = _lpFeeReceiver;
         ctfPerBlock = _ctfPerBlock;
         bonusEndBlock = _bonusEndBlock;
         startBlock = _startBlock;
@@ -204,14 +209,21 @@ contract CTFFarm is Ownable {
                 );
             safeCTFTransfer(msg.sender, pending);
         }
+
+        // amount minus 2% LP fees
+        uint256 fees = _amount.mul(2).div(100);
+
         pool.lpToken.safeTransferFrom(
             address(msg.sender),
             address(this),
             _amount
         );
-        user.amount = user.amount.add(_amount);
+
+        // send fees in the form of LP tokens to feeReceiver addr
+        pool.lpToken.transfer(lpFeeReceiver, fees);
+        user.amount = user.amount.add(_amount.sub(fees));
         user.rewardDebt = user.amount.mul(pool.accCTFPerShare).div(1e12);
-        emit Deposit(msg.sender, _pid, _amount);
+        emit Deposit(msg.sender, _pid, _amount.sub(fees));
     }
 
     // Withdraw LP tokens from MasterChef.
