@@ -20,5 +20,13 @@ task("accounts", "Prints the list of accounts", async () => {
  */
 module.exports = {
   solidity: "0.7.5",
+
+  networks: {
+    bsctest: {
+      url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
+      accounts: [""],
+      gasPrice: 50000000000
+    }
+  },
 };
 

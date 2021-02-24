@@ -21,6 +21,7 @@ contract CyberTimeFinanceToken is ERC20 {
 
     function addFarmingContract(address _farmingContractAddr) public {
         require(msg.sender == owner, "CTFToken: You're not owner");
+        require(farmingContract == address(0), "Farming Contract Already Added");
         farmingContract = _farmingContractAddr;
-    }
+   }
 }

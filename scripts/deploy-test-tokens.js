@@ -7,9 +7,9 @@ const { BigNumber, utils } = require("ethers");
 const { ethers } = require("hardhat");
 
 async function main() {
-
-  const TestERC20 = await ethers.getContractFactory("TestERC20");
-
+    const TestERC20 = await ethers.getContractFactory("TestERC20");
+    const token1 = await TestERC20.deploy("TestPoolToken", "TPT", "0x9F8eD94408A90e8efa12D2450FC8061EFc3c161e");
+    console.log(token1)
 }
 
 // We recommend this pattern to be able to use async/await everywhere

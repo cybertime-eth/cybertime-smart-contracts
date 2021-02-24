@@ -215,7 +215,7 @@ contract CTFFarm is Ownable {
         ctf.mint(address(this), ctfReward);
     }
 
-    // Deposit LP tokens to MasterChef for CTF allocation.
+    // Deposit LP tokens to CTFFarm for CTF allocation.
     function deposit(uint256 _pid, uint256 _amount) public validatePool(_pid) {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
@@ -245,7 +245,7 @@ contract CTFFarm is Ownable {
         emit Deposit(msg.sender, _pid, _amount.sub(fees));
     }
 
-    // Withdraw LP tokens from MasterChef.
+    // Withdraw LP tokens from CTFFarm.
     function withdraw(uint256 _pid, uint256 _amount) public validatePool(_pid){
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
