@@ -14,7 +14,7 @@ let ctfFarm;
 
 
 beforeEach(async function () {
-    const CTFFarm = await ethers.getContractFactory("NFTLFarm");
+    const CTFFarm = await ethers.getContractFactory("CTFFarm");
     const TestERC20 = await ethers.getContractFactory("TestERC20");
     const CTFToken = await ethers.getContractFactory("CyberTimeFinanceToken");
 
@@ -35,7 +35,6 @@ beforeEach(async function () {
         owner.address,
         feeReceiver.address,
         blockReward,
-        BigNumber.from("9000"),
         BigNumber.from(currentBlock.number),
         BigNumber.from(currentBlock.number),
     );
@@ -43,7 +42,7 @@ beforeEach(async function () {
     await ctfToken.addFarmingContract(ctfFarm.address)
 })
 
-describe("CTFFarmNFTLPool", function () {
+describe("CTFFarmCTFPool", function () {
     it("Should recieve the reward tokens successfully", async function () {
         const [owner, devAddress, feeReceiver, testAddr] = await ethers.getSigners();
 
@@ -66,7 +65,7 @@ describe("CTFFarmNFTLPool", function () {
 
         await time.advanceBlockTo(await owner.provider.getBlockNumber() + 100)
 
-        const pendingCTF = await ctfFarm.pendingNFTL("0", owner.address)
+        const pendingCTF = await ctfFarm.pendingCTF("0", owner.address)
 
         console.log("pending sushi", pendingCTF.toString())
 
@@ -88,9 +87,13 @@ describe("CTFFarmNFTLPool", function () {
         const ctfBalAfter = await ctfToken.balanceOf(feeReceiver.address);
         console.log(ctfBalAfter.toString() / 1e18)
 
-        const poolTokenBalAfter = await poolToken.balanceOf(feeReceiver.address)
+        const poolTokenBalAfter = await ctfToken.totalSupply()
+        const feeReceiverBal = await ctfToken.balanceOf(feeReceiver.address)
 
-        console.log(poolTokenBalAfter.toString())
+
+        console.log("CTFTotalSupply",poolTokenBalAfter.toString()/1e18)
+        console.log("feeReceiverBal",feeReceiverBal.toString()/1e18)
+
 
         const diff = (poolTokenBalBefore - amount).toLocaleString('fullwide', {
             useGrouping: false

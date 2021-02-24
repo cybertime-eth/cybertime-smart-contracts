@@ -1,5 +1,6 @@
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-web3");
+require("@nomiclabs/hardhat-etherscan");
 
 // usePlugin("@nomiclabs/hardhat-web3");
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -22,11 +23,17 @@ module.exports = {
   solidity: "0.7.5",
 
   networks: {
-    bsctest: {
+    testnet: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
       accounts: [""],
       gasPrice: 50000000000
     }
   },
+
+  etherscan: {
+    // Your API key for Etherscan
+    // Obtain one at https://etherscan.io/
+    apiKey: ""
+  }
 };
 

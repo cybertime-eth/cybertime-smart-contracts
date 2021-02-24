@@ -13,15 +13,14 @@ async function main() {
 
     const nftlToken = await NFTLToken.deploy(NFTLOwner, "1000000000000000000")
 
-    const devAddress = "0x9F8eD94408A90e8efa12D2450FC8061EFc3c161e"
-    const teamRewardsReceiver = "0x9F8eD94408A90e8efa12D2450FC8061EFc3c161e"
-    const nftlPerBlock = "8571400000000000000"
+    const devAddress = ""
+    const teamRewardsReceiver = ""
+    const nftlPerBlock = ""
     const teamShare = "0"
-    const startBlock = "6564155"
-    const bonusEndBlock = "17077288"
+    const startBlock = ""
     const NFTLTokenAddress = nftlToken.address
-    const tokenAddress = "0x77Ad1Fd1C6f65041B4AC8ca7c1702bD1a7343eA0"
-
+    
+    const tokenAddress = ""
 
     const nftlFarm = await NFTLFarm.deploy(
         NFTLTokenAddress,
@@ -30,7 +29,7 @@ async function main() {
         nftlPerBlock,
         teamShare,
         startBlock,
-        bonusEndBlock,
+        startBlock,
     )
 
     console.log("adding farming contract")

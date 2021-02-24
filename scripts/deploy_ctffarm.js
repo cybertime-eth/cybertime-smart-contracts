@@ -11,12 +11,11 @@ async function main() {
     const CTFToken = await ethers.getContractFactory("CyberTimeFinanceToken")
 
     const CTFTokenAddress = ""
-    const devAddress = "0x9F8eD94408A90e8efa12D2450FC8061EFc3c161e"
-    const lpFeeReceiver = "0x9F8eD94408A90e8efa12D2450FC8061EFc3c161e"
-    const ctfPerBlock = "17500000000000000"
-    const startBlock = "6563955"
-    const bonusEndBlock = "17077288"
-    const CTFOwner = "0x9F8eD94408A90e8efa12D2450FC8061EFc3c161e"
+    const devAddress = ""
+    const lpFeeReceiver = ""
+    const ctfPerBlock = ""
+    const startBlock = ""
+    const CTFOwner = ""
 
     const lpTokenAddress = "0x77Ad1Fd1C6f65041B4AC8ca7c1702bD1a7343eA0"
 
@@ -29,7 +28,7 @@ async function main() {
         lpFeeReceiver,
         ctfPerBlock,
         startBlock,
-        bonusEndBlock
+        startBlock,
     )
     
     console.log("adding farming contract")

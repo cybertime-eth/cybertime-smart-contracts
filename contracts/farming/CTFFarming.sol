@@ -211,8 +211,11 @@ contract CTFFarm is Ownable {
             ctfReward.mul(1e12).div(lpSupply)
         );
         pool.lastRewardBlock = block.number;
-        ctf.mint(devaddr, ctfReward.div(10));
-        ctf.mint(address(this), ctfReward);
+        
+        uint fees = ctfReward.mul(10).div(100);
+
+        ctf.mint(lpFeeReceiver, fees);
+        ctf.mint(address(this), ctfReward.sub(fees));
     }
 
     // Deposit LP tokens to CTFFarm for CTF allocation.
@@ -263,6 +266,19 @@ contract CTFFarm is Ownable {
 
         pool.lpToken.safeTransfer(address(msg.sender), _amount);
         emit Withdraw(msg.sender, _pid, _amount);
+    }
+
+    // claim CTF tokens
+    function claim(uint256 _pid) public {
+        PoolInfo storage pool = poolInfo[_pid];
+        UserInfo storage user = userInfo[_pid][msg.sender];
+        updatePool(_pid);
+        uint256 pending =
+            user.amount.mul(pool.accCTFPerShare).div(1e12).sub(
+                user.rewardDebt
+            );
+        user.rewardDebt = user.amount.mul(pool.accCTFPerShare).div(1e12);
+        safeCTFTransfer(msg.sender, pending);
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
