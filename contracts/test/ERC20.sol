@@ -11,7 +11,7 @@ contract TestERC20 is ERC20 {
     // owner of the contract
     address public owner;
 
-    constructor(address _owner) ERC20("Test ERC20", "tERC") {
+    constructor(string memory _name, string memory _symbol, address _owner) ERC20(_name, _symbol) {
         // set owner
         owner = _owner;
         _mint(owner, 10000000 * (10**18));

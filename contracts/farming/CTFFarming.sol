@@ -80,12 +80,28 @@ contract CTFFarm is Ownable {
         startBlock = _startBlock;
     }
 
+
+    modifier validatePool(uint256 _pid) { 
+        require ( _pid < poolInfo.length , "farm: pool do not exists");
+        _; 
+    }
+
     function poolLength() external view returns (uint256) {
         return poolInfo.length;
     }
 
     // Add a new lp to the pool. Can only be called by the owner.
     // XXX DO NOT add the same LP token more than once. Rewards will be messed up if you do.
+
+    function checkPoolDuplicate ( 
+        IERC20 _lpToken 
+    ) public { 
+        uint256 length = poolInfo.length ;
+        for (uint256 pid = 0; pid < length ; ++pid) {
+            require (poolInfo[pid].lpToken!=_lpToken , "add: existing pool?"); 
+        }
+    }
+
     function add(
         uint256 _allocPoint,
         IERC20 _lpToken,
@@ -94,6 +110,7 @@ contract CTFFarm is Ownable {
         if (_withUpdate) {
             massUpdatePools();
         }
+        checkPoolDuplicate(_lpToken);
         uint256 lastRewardBlock =
             block.number > startBlock ? block.number : startBlock;
         totalAllocPoint = totalAllocPoint.add(_allocPoint);
@@ -106,6 +123,7 @@ contract CTFFarm is Ownable {
             })
         );
     }
+
 
     // Update the given pool's CTF allocation point. Can only be called by the owner.
     function set(
@@ -174,7 +192,7 @@ contract CTFFarm is Ownable {
     }
 
     // Update reward variables of the given pool to be up-to-date.
-    function updatePool(uint256 _pid) public {
+    function updatePool(uint256 _pid) public validatePool(_pid) {
         PoolInfo storage pool = poolInfo[_pid];
         if (block.number <= pool.lastRewardBlock) {
             return;
@@ -189,16 +207,16 @@ contract CTFFarm is Ownable {
             multiplier.mul(ctfPerBlock).mul(pool.allocPoint).div(
                 totalAllocPoint
             );
-        ctf.mint(devaddr, ctfReward.div(10));
-        ctf.mint(address(this), ctfReward);
         pool.accCTFPerShare = pool.accCTFPerShare.add(
             ctfReward.mul(1e12).div(lpSupply)
         );
         pool.lastRewardBlock = block.number;
+        ctf.mint(devaddr, ctfReward.div(10));
+        ctf.mint(address(this), ctfReward);
     }
 
     // Deposit LP tokens to MasterChef for CTF allocation.
-    function deposit(uint256 _pid, uint256 _amount) public {
+    function deposit(uint256 _pid, uint256 _amount) public validatePool(_pid) {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
@@ -213,6 +231,9 @@ contract CTFFarm is Ownable {
         // amount minus 2% LP fees
         uint256 fees = _amount.mul(2).div(100);
 
+        user.amount = user.amount.add(_amount.sub(fees));
+        user.rewardDebt = user.amount.mul(pool.accCTFPerShare).div(1e12);
+
         pool.lpToken.safeTransferFrom(
             address(msg.sender),
             address(this),
@@ -221,13 +242,11 @@ contract CTFFarm is Ownable {
 
         // send fees in the form of LP tokens to feeReceiver addr
         pool.lpToken.transfer(lpFeeReceiver, fees);
-        user.amount = user.amount.add(_amount.sub(fees));
-        user.rewardDebt = user.amount.mul(pool.accCTFPerShare).div(1e12);
         emit Deposit(msg.sender, _pid, _amount.sub(fees));
     }
 
     // Withdraw LP tokens from MasterChef.
-    function withdraw(uint256 _pid, uint256 _amount) public {
+    function withdraw(uint256 _pid, uint256 _amount) public validatePool(_pid){
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(user.amount >= _amount, "withdraw: not good");
@@ -236,9 +255,11 @@ contract CTFFarm is Ownable {
             user.amount.mul(pool.accCTFPerShare).div(1e12).sub(
                 user.rewardDebt
             );
-        safeCTFTransfer(msg.sender, pending);
+
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accCTFPerShare).div(1e12);
+
+        safeCTFTransfer(msg.sender, pending);
 
         pool.lpToken.safeTransfer(address(msg.sender), _amount);
         emit Withdraw(msg.sender, _pid, _amount);
@@ -248,10 +269,10 @@ contract CTFFarm is Ownable {
     function emergencyWithdraw(uint256 _pid) public {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
-        pool.lpToken.safeTransfer(address(msg.sender), user.amount);
-        emit EmergencyWithdraw(msg.sender, _pid, user.amount);
         user.amount = 0;
         user.rewardDebt = 0;
+        pool.lpToken.safeTransfer(address(msg.sender), user.amount);
+        emit EmergencyWithdraw(msg.sender, _pid, user.amount);
     }
 
     // Safe ctf transfer function, just in case if rounding error causes pool to not have enough CTFs.

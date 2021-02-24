@@ -6,7 +6,6 @@
 const { BigNumber, utils } = require("ethers");
 const { ethers } = require("hardhat");
 
-
 async function main() {
 
   const CTFFarmNFTLPool = await ethers.getContractFactory("CTFFarmNFTLPool");

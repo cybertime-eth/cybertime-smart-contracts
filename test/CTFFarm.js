@@ -20,7 +20,7 @@ beforeEach(async function () {
 
     const [owner, devAddress, feeReceiver, testAddr] = await ethers.getSigners();
 
-    poolToken = await TestERC20.deploy(owner.address);
+    poolToken = await TestERC20.deploy("TestPoolToken", "TPT", owner.address);
     ctfToken = await CTFToken.deploy(owner.address, BigNumber.from("1000000000000000000"));
 
     const currentBlock = await owner.provider.getBlock();

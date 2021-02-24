@@ -88,12 +88,26 @@ contract NFTLFarm is Ownable {
         teamRewardsReceiver = _teamRewardsReceiver;
     }
 
+    modifier validatePool(uint256 _pid) { 
+        require ( _pid < poolInfo.length , "farm: pool do not exists");
+        _; 
+    }
+
     function poolLength() external view returns (uint256) {
         return poolInfo.length;
     }
 
     // Add a new token to the pool. Can only be called by the owner.
     // XXX DO NOT add the same token more than once. Rewards will be messed up if you do.
+    function checkPoolDuplicate ( 
+        IERC20 _token 
+    ) public { 
+        uint256 length = poolInfo.length ;
+        for (uint256 pid = 0; pid<length; ++pid) {
+            require(poolInfo[pid].token!= _token , "add: existing pool?"); 
+        }
+    }
+
     function add(
         uint256 _allocPoint,
         IERC20 _token,
@@ -102,6 +116,7 @@ contract NFTLFarm is Ownable {
         if (_withUpdate) {
             massUpdatePools();
         }
+        checkPoolDuplicate(_token);
         uint256 lastRewardBlock =
             block.number > startBlock ? block.number : startBlock;
         totalAllocPoint = totalAllocPoint.add(_allocPoint);
@@ -182,7 +197,7 @@ contract NFTLFarm is Ownable {
     }
 
     // Update reward variables of the given pool to be up-to-date.
-    function updatePool(uint256 _pid) public {
+    function updatePool(uint256 _pid) public validatePool(_pid) {
         PoolInfo storage pool = poolInfo[_pid];
         if (block.number <= pool.lastRewardBlock) {
             return;
@@ -200,19 +215,19 @@ contract NFTLFarm is Ownable {
 
         // staker share
         uint256 teamReward = nftlReward.mul(teamShare).div(10000);
-        // mint reward for stakers
-        nftl.mint(address(this), nftlReward.sub(teamReward));
-        // mint reward of the team
-        nftl.mint(teamRewardsReceiver, teamReward);
 
         pool.accNFTLPerShare = pool.accNFTLPerShare.add(
             nftlReward.mul(1e12).div(tokenSupply)
         );
         pool.lastRewardBlock = block.number;
+        // mint reward for stakers
+        nftl.mint(address(this), nftlReward.sub(teamReward));
+        // mint reward of the team
+        nftl.mint(teamRewardsReceiver, teamReward);
     }
 
     // Deposit Tokens for NFTL allocation.
-    function deposit(uint256 _pid, uint256 _amount) public {
+    function deposit(uint256 _pid, uint256 _amount) public validatePool(_pid) {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
@@ -223,18 +238,20 @@ contract NFTLFarm is Ownable {
                 );
             safeNFTLTransfer(msg.sender, pending);
         }
+        user.amount = user.amount.add(_amount);
+        user.rewardDebt = user.amount.mul(pool.accNFTLPerShare).div(1e12);
+
         pool.token.safeTransferFrom(
             address(msg.sender),
             address(this),
             _amount
         );
-        user.amount = user.amount.add(_amount);
-        user.rewardDebt = user.amount.mul(pool.accNFTLPerShare).div(1e12);
+
         emit Deposit(msg.sender, _pid, _amount);
     }
 
     // Withdraw tokens
-    function withdraw(uint256 _pid, uint256 _amount) public {
+    function withdraw(uint256 _pid, uint256 _amount) public validatePool(_pid) {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(user.amount >= _amount, "withdraw: not good");
@@ -243,9 +260,11 @@ contract NFTLFarm is Ownable {
             user.amount.mul(pool.accNFTLPerShare).div(1e12).sub(
                 user.rewardDebt
             );
-        safeNFTLTransfer(msg.sender, pending);
+        
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accNFTLPerShare).div(1e12);
+
+        safeNFTLTransfer(msg.sender, pending);
 
         pool.token.safeTransfer(address(msg.sender), _amount);
         emit Withdraw(msg.sender, _pid, _amount);
@@ -255,10 +274,10 @@ contract NFTLFarm is Ownable {
     function emergencyWithdraw(uint256 _pid) public {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
-        pool.token.safeTransfer(address(msg.sender), user.amount);
-        emit EmergencyWithdraw(msg.sender, _pid, user.amount);
         user.amount = 0;
         user.rewardDebt = 0;
+        pool.token.safeTransfer(address(msg.sender), user.amount);
+        emit EmergencyWithdraw(msg.sender, _pid, user.amount);
     }
 
     // Safe nftl transfer function, just in case if rounding error causes pool to not have enough NFTLs.
