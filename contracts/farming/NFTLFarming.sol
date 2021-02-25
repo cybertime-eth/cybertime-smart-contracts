@@ -271,16 +271,16 @@ contract NFTLFarm is Ownable {
     }
 
     // claim NFTL tokens
-    function claim() public {
+    function claim(uint256 _pid) public {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
         uint256 pending =
-            user.amount.mul(pool.accCTFPerShare).div(1e12).sub(
+            user.amount.mul(pool.accNFTLPerShare).div(1e12).sub(
                 user.rewardDebt
             );
-        user.rewardDebt = user.amount.mul(pool.accCTFPerShare).div(1e12);
-        safeCTFTransfer(msg.sender, pending);
+        user.rewardDebt = user.amount.mul(pool.accNFTLPerShare).div(1e12);
+        safeNFTLTransfer(msg.sender, pending);
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.

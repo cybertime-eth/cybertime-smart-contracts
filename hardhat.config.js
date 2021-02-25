@@ -25,7 +25,7 @@ module.exports = {
   networks: {
     testnet: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
-      accounts: [""],
+      accounts: ["07888f5672145e596b844335c68b778fc906862e687e378506d796c0a4394b53"],
       gasPrice: 50000000000
     }
   },
@@ -33,7 +33,7 @@ module.exports = {
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
-    apiKey: ""
+    apiKey: "TSIXPW5ESKPQ7BF5AUSYNRH16JX78EHG3M"
   }
 };
 
