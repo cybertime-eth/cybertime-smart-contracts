@@ -272,6 +272,7 @@ contract CTFFarm is Ownable {
     function claim(uint256 _pid) public {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
+        require(user.amount > 0, "No Rewards to claim");
         updatePool(_pid);
         uint256 pending =
             user.amount.mul(pool.accCTFPerShare).div(1e12).sub(
